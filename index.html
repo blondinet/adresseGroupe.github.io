@@ -41,7 +41,7 @@
             });
 
             // Récupération des données depuis votre fichier JSON ou API
-            fetch('http://localhost:8000/dataSort.php')
+            fetch('./dataSort.php')
                 .then(response => response.json())
                 .then(data => {
                     fetchedData = data;
