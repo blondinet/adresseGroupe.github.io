@@ -22,8 +22,8 @@ $csvSorted = triByVote($csv);
 // ecrireGroupCsv($csvSorted);
 
 $json_data_final = json_encode($csvSorted);
-header('Content-Type: application/json');
-echo $json_data_final;
+// header('Content-Type: application/json');
+// echo $json_data_final;
 
 // Écrire le JSON dans un fichier
 if (file_put_contents('data.json', $json_data_final)) {
@@ -57,7 +57,6 @@ function triByVote(array $csv) {
             if ($itemProche !== null) {
                 $lastCompteur = $compteur;
                 $compteur += intval($itemProche['Nombre']);
-                
                 $tabMostProche[] = $itemProche;
                 $csv = searchAndDelete($csv, $itemProche);
             }
@@ -106,7 +105,7 @@ function ecrireGroupCsv($tab) {
                         "Groupe " . ($groupIndex + 1),
                         $item['Adresse'],
                         $item['Nombre'],
-                        $item['Voix estimées'],
+                        round($item['Voix estimées'], 2),
                         ''
                     ]);
                 } else {
@@ -114,7 +113,7 @@ function ecrireGroupCsv($tab) {
                         '',
                         $item['Adresse'],
                         $item['Nombre'],
-                        $item['Voix estimées'],
+                        round($item['Voix estimées'], 2),
                         round(getDistance($bestItem, $item), 0)
                     ]);
                 }    
