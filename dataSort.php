@@ -25,6 +25,12 @@ $json_data_final = json_encode($csvSorted);
 header('Content-Type: application/json');
 echo $json_data_final;
 
+// Écrire le JSON dans un fichier
+if (file_put_contents('data.json', $json_data_final)) {
+    echo "Fichier JSON créé avec succès.";
+} else {
+    echo "Erreur lors de la création du fichier JSON.";
+}
 
 function triByVote(array $csv) {
     $index = 0;
