@@ -5,6 +5,13 @@
     <title>Carte avec points</title>
     <!-- Inclure Leaflet CSS et JavaScript -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-select/1.13.1/css/bootstrap-select.min.css">
+    <script src="https://code.jquery.com/jquery-3.3.1.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-select/1.13.1/js/bootstrap-select.min.js"></script>
+
     <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
     <style>
         #map { height: 600px; }
@@ -12,73 +19,113 @@
 </head>
 <body>
     <div id="map"></div>
+    <select id="select-point" class="selectpicker" data-live-search="true" data-style="btn-primary">
+    </select>
     <script>
         var map = L.map('map').setView([45.7516852, 4.9162884], 13); // Initialiser la carte avec un centre et un zoom
 
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            maxZoom: 19,
-            attribution: 'Map data &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-        }).addTo(map);
+                maxZoom: 19,
+                attribution: 'Map data &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+            }).addTo(map);
 
-        // Récupérer les données depuis le fichier JSON généré côté serveur
-        fetch('http://localhost:8000/dataSort.php')
-            .then(response => response.json())
-            .then(data => {
-                let i = 0; 
-                var colorIcon;
- 
-                // Pour avoir un morceau
-                // Object.keys(data).slice(200,250).forEach(rue => {
-                // Utilisation de l'icône personnalisée pour chaque marqueur
-                Object.values(data).forEach(group => {
-                    i+=1;
-                    // Juste pour avoir une couleur qui dérive avec le nombre
-                    colorIcon = L.divIcon({
-                        className: 'custom-div-icon',
-                        html: "<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='rgb(" + (0+(i)) + ", 100, 90)' width='48px' height='48px'><path d='M12 0C7 0 3 4 3 9c0 7 9 15 9 15s9-8 9-15c0-5-4-9-9-9zm-1.5 13l-3.5-3.5 1.5-1.5 2 2 4-4 1.5 1.5-5.5 5.5z'/></svg>",
-                        iconSize: [48, 48],
-                        iconAnchor: [24, 48],
-                        popupAnchor: [0, -48]
+        document.addEventListener('DOMContentLoaded', function () {
+            var selectPicker = $('#select-point'); // Sélectionne le selectpicker par son ID
+            var fetchedData; // Variable pour stocker les données récupérées
+
+            // Initialisation du selectpicker
+            selectPicker.selectpicker({
+                liveSearch: true,
+                style: 'btn-primary',
+                title: 'Sélectionner un point...'
+            });
+
+            // Récupération des données depuis votre fichier JSON ou API
+            fetch('http://localhost:8000/dataSort.php')
+                .then(response => response.json())
+                .then(data => {
+                    fetchedData = data;
+
+                    let iGroup = 0;
+                    // Boucler à travers les données pour ajouter chaque point au selectpicker
+                    Object.values(data).forEach(group => {
+                        var option = `<option value="${iGroup}">${group[0].Adresse}</option>`;
+                        selectPicker.append(option);
+                        iGroup+=1;
                     });
-                    
-                    group.forEach(point => {
 
+                    // Rafraîchir le selectpicker après l'ajout des options
+                    selectPicker.selectpicker('refresh');
+                })
+                .catch(error => {
+                    console.error('Erreur lors de la récupération des données :', error);
+                });
+
+            // Écouteur d'événement sur le changement de sélection
+            selectPicker.on('change', function () {
+                if (fetchedData) {
+
+                    map.eachLayer(function (layer) {
+                        if (layer instanceof L.Marker) {
+                            map.removeLayer(layer);
+                        }
+                    });
+
+                    
+                    var selectedValue = $(this).val();
+                    var selectedGroup = fetchedData[selectedValue];
+
+                    selectedGroup.forEach(point => {
                         let latitude = point.Lat;
                         let longitude = point.Long;
-                        var marker = L.marker([latitude, longitude], {icon: colorIcon}).addTo(map);
+                        var marker = L.marker([latitude, longitude]).addTo(map);
                         marker.bindPopup(
                             'Adresse: ' + point.adresse +
                             '<br>Nombre: ' + point.nombre +
                             '<br>coord: ' + point.coordinate
                         );
                     })
-                });
-                
-                // Object.keys(data).forEach(rue => {
-                //     i+=1;
-                //     // Juste pour avoir une couleur qui dérive avec le nombre
-                //     colorIcon = L.divIcon({
-                //         className: 'custom-div-icon',
-                //         html: "<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='rgb(" + (50+(i/5)) + ", 50, 90)' width='48px' height='48px'><path d='M12 0C7 0 3 4 3 9c0 7 9 15 9 15s9-8 9-15c0-5-4-9-9-9zm-1.5 13l-3.5-3.5 1.5-1.5 2 2 4-4 1.5 1.5-5.5 5.5z'/></svg>",
-                //         iconSize: [48, 48],
-                //         iconAnchor: [24, 48],
-                //         popupAnchor: [0, -48]
-                //     });
-                //     data.forEach(point => {
-                //         console.log(point);
-                //     })
-                //     data[rue].forEach(point => {
-                //         let latitude = point.coordinate[1];
-                //         let longitude = point.coordinate[0];
-                //         var marker = L.marker([latitude, longitude], {icon: colorIcon}).addTo(map);
-                //         marker.bindPopup(
-                //             'Adresse: ' + point.adresse +
-                //             '<br>Nombre: ' + point.nombre +
-                //             '<br>coord: ' + point.coordinate);
-                //     });
-                // });
-
+                }
             });
+        });
+
+
+            // Récupérer les données depuis le fichier JSON généré côté serveur
+            // fetch('http://localhost:8000/dataSort.php')
+            //     .then(response => response.json())
+            //     .then(data => {
+            //         let i = 0; 
+            //         var colorIcon;
+    
+            //         // Pour avoir un morceau
+            //         // Object.keys(data).slice(200,250).forEach(rue => {
+            //         // Utilisation de l'icône personnalisée pour chaque marqueur
+            //         Object.values(data).forEach(group => {
+            //             i+=1;
+            //             // Juste pour avoir une couleur qui dérive avec le nombre
+            //             colorIcon = L.divIcon({
+            //                 className: 'custom-div-icon',
+            //                 html: "<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='rgb(" + (0+(i)) + ", 100, 90)' width='48px' height='48px'><path d='M12 0C7 0 3 4 3 9c0 7 9 15 9 15s9-8 9-15c0-5-4-9-9-9zm-1.5 13l-3.5-3.5 1.5-1.5 2 2 4-4 1.5 1.5-5.5 5.5z'/></svg>",
+            //                 iconSize: [48, 48],
+            //                 iconAnchor: [24, 48],
+            //                 popupAnchor: [0, -48]
+            //             });
+                        
+            //             group.forEach(point => {
+
+            //                 let latitude = point.Lat;
+            //                 let longitude = point.Long;
+            //                 var marker = L.marker([latitude, longitude], {icon: colorIcon}).addTo(map);
+            //                 marker.bindPopup(
+            //                     'Adresse: ' + point.adresse +
+            //                     '<br>Nombre: ' + point.nombre +
+            //                     '<br>coord: ' + point.coordinate
+            //                 );
+            //             })
+            //         });
+                    
+            //     });
+
     </script>
 </body>
 </html>

@@ -19,11 +19,11 @@
 $csv = ouvertureCsv('hlms_voix_estimées.csv');
 $csvSorted = triByVote($csv);
 
-ecrireGroupCsv($csvSorted);
+// ecrireGroupCsv($csvSorted);
 
-// $json_data_final = json_encode($csvSorted);
-// header('Content-Type: application/json');
-// echo $json_data_final;
+$json_data_final = json_encode($csvSorted);
+header('Content-Type: application/json');
+echo $json_data_final;
 
 
 function triByVote(array $csv) {
