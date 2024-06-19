@@ -1,3 +1,5 @@
+# Readme plus a jour !!!!!
+
 Le fichier php dataSort.php est le fichier principale
 
 Il s'execute avec php ./dataSort.php
