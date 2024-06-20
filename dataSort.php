@@ -16,14 +16,28 @@
 
 //toto
 
-$csv = ouvertureCsv('hlms_voix_estimées.csv');
-$csvSorted = triByVote($csv);
+// $csv = ouvertureCsv('hlms_voix_estimées.csv');
+// $csvSorted = triByVote($csv);
 
-// ecrireGroupCsv($csvSorted);
+// // ecrireGroupCsv($csvSorted);
+// $json_data_final = json_encode($csvSorted);
 
-$json_data_final = json_encode($csvSorted);
 // header('Content-Type: application/json');
 // echo $json_data_final;
+
+// Créate clustered
+$csvCluster = ouvertureCsv('hlms_clusters.csv');
+$tabCluster = [];
+foreach($csvCluster as $item) {
+    if (!isset($tabCluster[$item['Cluster']])) {
+        $tabCluster[$item['Cluster']-1] = [];
+    }
+    $tabCluster[$item['Cluster']-1][] = $item;
+}
+
+// var_dump($tabCluster);
+
+$json_data_final = json_encode($tabCluster);
 
 // Écrire le JSON dans un fichier
 if (file_put_contents('data.json', $json_data_final)) {
@@ -32,6 +46,8 @@ if (file_put_contents('data.json', $json_data_final)) {
     echo "Erreur lors de la création du fichier JSON.";
 }
 
+
+die();
 function triByVote(array $csv) {
     $index = 0;
     $tabProcheAll = [];

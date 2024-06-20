@@ -52,7 +52,7 @@
             selectPicker.selectpicker({
                 liveSearch: true,
                 style: 'btn-primary',
-                title: 'Sélectionner un point...'
+                title: "Sélection d'un cluster..."
             });
 
             // Récupération des données depuis votre fichier JSON ou API
@@ -82,7 +82,19 @@
                     var selectedValue = $(this).val();
                     var selectedGroup = fetchedData[selectedValue];
 
-                    var text = `<div id="grp-${selectedValue}">Groupe ${selectedValue} : ${selectedGroup[0].Adresse}<button class='btn btn-danger' onclick="deleteGroup(${selectedValue})">X</button></div>`;
+                    // 'Adresse: ' + point.Adresse +
+                    //         '<br>Nombre de porte: ' + point.Nombre +
+                    //         '<br>Nombre de voix: ' + point['Voix estim\u00e9es']
+
+                    console.log(selectedGroup[0]);
+
+                    var text = `<div id="grp-${selectedValue}">`;
+                        text += `Groupe ${selectedValue} : ${selectedGroup[0].Adresse} : </br>`;
+                        text += ` nombre binomes : ${selectedGroup[0]["Nb Binomes"]} : </br>`;
+                        text += ` nombre portes : ${selectedGroup[0]["Nombre"]} : </br>`;
+                        text += ` voix estimé : ${selectedGroup[0]["Voix estimées du cluster par binome"]} : </br>`;
+                        text += `<button class='btn btn-danger' onclick="deleteGroup(${selectedValue})">X</button>`;
+                        text += `</div>`;
                     selectedGrps.append(text);                    
 
                     selectedGroup.forEach(point => {
