@@ -11,7 +11,6 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"></script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-select/1.13.1/js/bootstrap-select.min.js"></script>
-
     <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
     <style>
         #map { height: 600px; }
@@ -26,6 +25,9 @@
         </div>
         <div id="group-selected" style="width: 25%; overflow:scroll">
         </div>
+        <div id="list-deleted" style="width: 50%; overflow:scroll">
+            <button id="show-deleted">Afficher les résidences déja visitées</button>
+        </div>
     </div>
     <script>
         var map = L.map('map').setView([45.7516852, 4.9162884], 13); // Initialiser la carte avec un centre et un zoom
@@ -34,7 +36,7 @@
             maxZoom: 19,
             attribution: 'Map data &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
         }).addTo(map);
-
+        
         function deleteGroup(selectedValue) {
             map.eachLayer(function (layer) {
                 if (layer instanceof L.Marker && layer.options.id === "marker-"+selectedValue) {
@@ -43,10 +45,17 @@
             });
             $('#grp-'+selectedValue).remove()
         }
+
         document.addEventListener('DOMContentLoaded', function () {
             var selectPicker = $('#select-point'); // Sélectionne le selectpicker par son ID
             var selectedGrps = $('#group-selected');
+            var deletedGrpsList = $('#list-deleted');
+            var deletedBtn = $('#show-deleted');
+            
+            var showDeleted = true;
+            var deletedGrps = [];
             var fetchedData; // Variable pour stocker les données récupérées
+            var fetchedDataVisited;
 
             // Initialisation du selectpicker
             selectPicker.selectpicker({
@@ -56,25 +65,104 @@
             });
 
             // Récupération des données depuis votre fichier JSON ou API
-            fetch('./data.json')
-                .then(response => response.json())
+            fetch('https://docs.google.com/spreadsheets/d/e/2PACX-1vR3-Vi3NqunT7gn4oqfthvfdli61k1ilCAAK8HHAvp1svvPqwbN2AKRZmea7MqvNpB5anhHEuVAu5-7/pub?gid=1064561417&single=true&output=csv')
+                .then(response => response.text())
                 .then(data => {
-                    fetchedData = data;
+                    // Parse the CSV data
+                    const rows = data.split('\n');
+                    const csvArray = rows.map(row => row.split(','));
+                    fetchedDataVisited = csvArray;
+                    // Récupération des données depuis votre fichier JSON ou API
+                    fetch('./data.json')
+                        .then(response => response.json())
+                        .then(data => {
+                            fetchedData = data;
 
-                    let iGroup = 1;
-                    // Boucler à travers les données pour ajouter chaque point au selectpicker
-                    Object.values(data).forEach(group => {
-                        var option = `<option value="${iGroup}">Groupe ${iGroup} : ${group[0].Adresse}</option>`;
-                        selectPicker.append(option);
-                        iGroup+=1;
-                    });
+                            i = 1; j = 0;
+                            Object.values(fetchedDataVisited).forEach(visite => {
+                                Object.values(fetchedData).forEach((groups, indexs) => {
+                                    Object.values(groups).forEach((group, index) => {
+                                        if (
+                                            visite[0] === group[''] && 
+                                            visite[visite.length-1] !== '\r' && 
+                                            visite[visite.length-1]
+                                        ) {
+                                            group['visite'] = visite[visite.length-1];
+                                            deletedGrps.push(group);
+                                            groups.splice(index, 1);
+                                            if (fetchedData[indexs + 1].length === 0) {
+                                                delete fetchedData[indexs + 1];
+                                                newObj = {};
+                                                Object.entries(fetchedData).forEach((entry, eIndex) => {
+                                                    newObj[eIndex+1] = entry[1];
+                                                })
+                                                fetchedData = newObj;
+                                            }
+                                        }
+                                        j += 1;
+                                    })
+                                })
+                                i += 1;
+                            })
 
-                    // Rafraîchir le selectpicker après l'ajout des options
-                    selectPicker.selectpicker('refresh');
+            
+                            let iGroup = 1;
+                            // Boucler à travers les données pour ajouter chaque point au selectpicker
+                            Object.values(fetchedData).forEach(group => {
+                                var option = `<option value="${iGroup}">Groupe ${iGroup} : ${group[0].Adresse}</option>`;
+                                selectPicker.append(option);
+                                iGroup+=1;
+                            });
+
+                            // Rafraîchir le selectpicker après l'ajout des options
+                            selectPicker.selectpicker('refresh');
+                        })
+                        .catch(error => {
+                            console.error('Erreur lors de la récupération des données :', error);
+                        });
                 })
                 .catch(error => {
                     console.error('Erreur lors de la récupération des données :', error);
                 });
+                
+
+            deletedBtn.on('click', function(event) {
+                if (true === showDeleted) {
+                    deletedGrps.forEach((point, index) => {
+                        selectedValue = point[''];
+    
+                        var text = `<div id="grp-${selectedValue}">`;
+                        text += `Groupe ${selectedValue} : ${point.Adresse} : </br>`;
+                        text += ` nombre binomes : ${point["Nb Binomes"]} : </br>`;
+                        text += ` nombre portes : ${point["Nombre"]} : </br>`;
+                        text += ` voix estimé : ${point["Voix estimées du cluster par binome"]} : </br>`;
+                        text += ` Visité le : ${point['visite']} : </br>`;
+                        text += ` --------------------------------- </br></br>`;
+                        text += `</div>`;
+                        deletedGrpsList.append(text); 
+    
+                    
+                        let latitude = point.Lat;
+                        let longitude = point.Long;
+                        var marker = L.marker([latitude, longitude]).addTo(map);
+                        marker.bindPopup(
+                            'Adresse: ' + point.Adresse +
+                            '<br>Nombre de porte: ' + point.Nombre +
+                            '<br>Nombre de voix: ' + point['Voix estim\u00e9es'] +
+                            '<br>Groupe numéro: '+ point['Cluster']
+                        );
+                        marker.options.id = `marker-${point['']}`;
+                    })
+                    deletedBtn.text('Cacher les résidences déja visitées');
+                    showDeleted = false;
+                } else {
+                    deletedGrps.forEach((group, index) => {
+                        deleteGroup(group['']);
+                    });
+                    deletedBtn.text('Afficher les résidences déja visitées');
+                    showDeleted = true
+                }
+            });
 
             // Écouteur d'événement sur le changement de sélection
             selectPicker.on('change', function () {
@@ -86,14 +174,12 @@
                     //         '<br>Nombre de porte: ' + point.Nombre +
                     //         '<br>Nombre de voix: ' + point['Voix estim\u00e9es']
 
-                    console.log(selectedGroup[0]);
-
                     var text = `<div id="grp-${selectedValue}">`;
                         text += `Groupe ${selectedValue} : ${selectedGroup[0].Adresse} : </br>`;
                         text += ` nombre binomes : ${selectedGroup[0]["Nb Binomes"]} : </br>`;
                         text += ` nombre portes : ${selectedGroup[0]["Nombre"]} : </br>`;
-                        text += ` voix estimé : ${selectedGroup[0]["Voix estimées du cluster par binome"]} : </br>`;
-                        text += `<button class='btn btn-danger' onclick="deleteGroup(${selectedValue})">X</button>`;
+                        text += ` voix estimées : ${selectedGroup[0]["Voix estimées du cluster par binome"]} : </br>`;
+                        text += `<button class='btn btn-danger' onclick="deleteGroup(${selectedValue})">Ne plus afficher</button>`;
                         text += `</div>`;
                     selectedGrps.append(text);                    
 
@@ -113,7 +199,6 @@
             });
         });
 
-    
             // Récupérer les données depuis le fichier JSON généré côté serveur
             // fetch('http://localhost:8000/dataSort.php')
             //     .then(response => response.json())
