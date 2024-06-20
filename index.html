@@ -104,7 +104,8 @@
                         marker.bindPopup(
                             'Adresse: ' + point.Adresse +
                             '<br>Nombre de porte: ' + point.Nombre +
-                            '<br>Nombre de voix: ' + point['Voix estim\u00e9es']
+                            '<br>Nombre de voix: ' + point['Voix estim\u00e9es'] +
+                            '<br>Groupe numéro: '+ point['Cluster']
                         );
                         marker.options.id = `marker-${selectedValue}`;
                     })
