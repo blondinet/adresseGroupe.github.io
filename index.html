@@ -130,15 +130,16 @@
                 if (true === showDeleted) {
                     deletedGrps.forEach((point, index) => {
                         selectedValue = point[''];
-    
+
+                        var voixParBinome = parseFloat(point["Voix estimées du cluster par binome"]).toFixed(1)
+
                         var text = `<div id="grp-${selectedValue}">`;
                         text += `Groupe ${selectedValue} : ${point.Adresse} : </br>`;
                         text += ` nombre binomes : ${point["Nb Binomes"]} : </br>`;
-                        text += ` nombre portes : ${point["Nombre"]} : </br>`;
-                        text += ` voix estimé : ${point["Voix estimées du cluster par binome"]} : </br>`;
+                        text += ` voix estimées par binome: ${voixParBinome} : </br>`;
                         text += ` Visité le : ${point['visite']} : </br>`;
                         text += ` --------------------------------- </br></br>`;
-                        text += `</div>`;
+                        text += `</div>`; 
                         deletedGrpsList.append(text); 
     
                     
@@ -170,6 +171,16 @@
                     var selectedValue = $(this).val();
                     var selectedGroup = fetchedData[selectedValue];
 
+                    // Nombre de portes total pour le cluster
+                    var nbPortes = 0;
+                    for (var i in selectedGroup) {
+                        console.log(selectedGroup[i]);
+                        nbPortes += parseInt(selectedGroup[i].Nombre);
+                    }
+
+                    // Arrondi les voix a 1 chiffre apres la virgule
+                    var voixParBinome = parseFloat(selectedGroup[0]["Voix estimées du cluster par binome"]).toFixed(1)
+
                     // 'Adresse: ' + point.Adresse +
                     //         '<br>Nombre de porte: ' + point.Nombre +
                     //         '<br>Nombre de voix: ' + point['Voix estim\u00e9es']
@@ -177,8 +188,8 @@
                     var text = `<div id="grp-${selectedValue}">`;
                         text += `Groupe ${selectedValue} : ${selectedGroup[0].Adresse} : </br>`;
                         text += ` nombre binomes : ${selectedGroup[0]["Nb Binomes"]} : </br>`;
-                        text += ` nombre portes : ${selectedGroup[0]["Nombre"]} : </br>`;
-                        text += ` voix estimées : ${selectedGroup[0]["Voix estimées du cluster par binome"]} : </br>`;
+                        text += ` nombre portes : ${nbPortes} : </br>`;
+                        text += ` voix estimées par binome: ${voixParBinome} : </br>`;
                         text += `<button class='btn btn-danger' onclick="deleteGroup(${selectedValue})">Ne plus afficher</button>`;
                         text += `</div>`;
                     selectedGrps.append(text);                    
@@ -190,7 +201,7 @@
                         marker.bindPopup(
                             'Adresse: ' + point.Adresse +
                             '<br>Nombre de porte: ' + point.Nombre +
-                            '<br>Nombre de voix: ' + point['Voix estim\u00e9es'] +
+                            '<br>Nombre de voix: ' + parseFloat(point['Voix estim\u00e9es']).toFixed(1) +
                             '<br>Groupe numéro: '+ point['Cluster']
                         );
                         marker.options.id = `marker-${selectedValue}`;
