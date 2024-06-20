@@ -78,16 +78,24 @@
                         .then(data => {
                             fetchedData = data;
 
+                            // Recherche de l'index a partir de la fin de la colonne date de passage
+                            indexDateFin = 0;
+                            fetchedDataVisited[0].forEach((col, index) => {
+                                if (col === 'Date de passage') {
+                                    indexDateFin = fetchedDataVisited[0].length - index;
+                                }
+                            })
+                            
                             i = 1; j = 0;
                             Object.values(fetchedDataVisited).forEach(visite => {
                                 Object.values(fetchedData).forEach((groups, indexs) => {
                                     Object.values(groups).forEach((group, index) => {
                                         if (
                                             visite[0] === group[''] && 
-                                            visite[visite.length-1] !== '\r' && 
-                                            visite[visite.length-1]
+                                            visite[visite.length-indexDateFin] !== '\r' && 
+                                            visite[visite.length-indexDateFin]
                                         ) {
-                                            group['visite'] = visite[visite.length-1];
+                                            group['visite'] = visite[visite.length-indexDateFin];
                                             deletedGrps.push(group);
                                             groups.splice(index, 1);
                                             if (fetchedData[indexs + 1].length === 0) {
@@ -174,7 +182,6 @@
                     // Nombre de portes total pour le cluster
                     var nbPortes = 0;
                     for (var i in selectedGroup) {
-                        console.log(selectedGroup[i]);
                         nbPortes += parseInt(selectedGroup[i].Nombre);
                     }
 
