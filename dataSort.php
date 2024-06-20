@@ -30,12 +30,10 @@ $csvCluster = ouvertureCsv('hlms_clusters.csv');
 $tabCluster = [];
 foreach($csvCluster as $item) {
     if (!isset($tabCluster[$item['Cluster']])) {
-        $tabCluster[$item['Cluster']-1] = [];
+        $tabCluster[$item['Cluster']] = [];
     }
-    $tabCluster[$item['Cluster']-1][] = $item;
+    $tabCluster[$item['Cluster']][] = $item;
 }
-
-// var_dump($tabCluster);
 
 $json_data_final = json_encode($tabCluster);
 
