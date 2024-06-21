@@ -78,10 +78,12 @@
                         .then(data => {
                             fetchedData = data;
 
+                            let i = 1;
                             Object.values(fetchedData).forEach((groups, indexs) => {
                                     Object.values(groups).forEach((group, index) => {
-                                        group['indexGroupe'] = indexs;
+                                        group['indexGroupe'] = i;
                                     })
+                                i+=1;
                             });
                             
                             // Recherche de l'index a partir de la fin de la colonne date de passage
