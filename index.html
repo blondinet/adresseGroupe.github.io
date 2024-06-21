@@ -105,15 +105,16 @@
                                         ) {
                                             group['visite'] = visite[visite.length-indexDateFin];
                                             deletedGrps.push(group);
+                                            delete fetchedData[indexs + 1];
                                             groups.splice(index, 1);
-                                            if (fetchedData[indexs + 1].length === 0) {
-                                                delete fetchedData[indexs + 1];
-                                                newObj = {};
-                                                Object.entries(fetchedData).forEach((entry, eIndex) => {
-                                                    newObj[eIndex+1] = entry[1];
-                                                })
-                                                fetchedData = newObj;
-                                            }
+                                            //if (fetchedData[indexs + 1].length === 0) {
+                                             //   delete fetchedData[indexs + 1];
+                                              //  newObj = {};
+                                              //  Object.entries(fetchedData).forEach((entry, eIndex) => {
+                                              //      newObj[eIndex+1] = entry[1];
+                                              //  })
+                                              //  fetchedData = newObj;
+                                            //}
                                         }
                                         j += 1;
                                     })
