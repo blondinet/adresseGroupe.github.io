@@ -105,8 +105,8 @@
                                         ) {
                                             group['visite'] = visite[visite.length-indexDateFin];
                                             deletedGrps.push(group);
-                                            console.log(indexs, ' : ', indexDateFin, ' : ', fetchedData);
-                                            delete fetchedData[indexs + indexDateFin - 1];
+                                            console.log(indexs, ' : ', indexDateFin, ' : ', fetchedData, ' : ', fetchedData.length());
+                                            delete fetchedData[indexs + 1];
                                             //groups.splice(index, 1);
                                             //if (fetchedData[indexs + 1].length === 0) {
                                              //   delete fetchedData[indexs + 1];
