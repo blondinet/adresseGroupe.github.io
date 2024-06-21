@@ -200,6 +200,22 @@
                     // Arrondi les voix a 1 chiffre apres la virgule
                     var voixParBinome = parseFloat(selectedGroup[0]["Voix estimées du cluster par binome"]).toFixed(1)
 
+                    // Boucler à travers les données pour trouver si le le groupe est attribué
+                    var attributed = false;
+                    var indexGroup = 2;
+                    var indexAttribution = 4;
+                    Object.values(fetchedDataVisited).forEach(group => {
+                        if (group[indexAttribution] == 'TRUE\r') {
+                            console.log(group[indexGroup]);
+                            console.log(selectedGroup[0].Cluster);
+                            if (group[indexGroup] == parseInt(selectedGroup[0].Cluster)) {
+                                attributed = true;
+                            }
+                        }
+                    });
+
+                    var attributionDisplay = attributed ? '<font color="green">Déjà attribué</font>' : 'Non attribué';
+
                     // 'Adresse: ' + point.Adresse +
                     //         '<br>Nombre de porte: ' + point.Nombre +
                     //         '<br>Nombre de voix: ' + point['Voix estim\u00e9es']
@@ -209,6 +225,7 @@
                         text += ` nombre binomes : ${selectedGroup[0]["Nb Binomes"]} : </br>`;
                         text += ` nombre portes : ${nbPortes} : </br>`;
                         text += ` voix estimées par binome: ${voixParBinome} : </br>`;
+                        text += ` ${attributionDisplay} </br>`;
                         text += `<button class='btn btn-danger' onclick="deleteGroup(${selectedValue})">Ne plus afficher</button>`;
                         text += `</div>`;
                     selectedGrps.append(text);                    
