@@ -154,7 +154,7 @@
                         var voixParBinome = parseFloat(point["Voix estimées du cluster par binome"]).toFixed(1)
 
                         var text = `<div id="grp-${selectedValue}">`;
-                        text += `Groupe ${selectedValue} : ${point.Adresse} : </br>`;
+                        text += `Groupe ${point.Cluster} : ${point.Adresse} : </br>`;
                         text += ` nombre binomes : ${point["Nb Binomes"]} : </br>`;
                         text += ` voix estimées par binome: ${voixParBinome} : </br>`;
                         text += ` Visité le : ${point['visite']} : </br>`;
