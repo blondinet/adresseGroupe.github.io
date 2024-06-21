@@ -78,6 +78,12 @@
                         .then(data => {
                             fetchedData = data;
 
+                            Object.values(fetchedData).forEach((groups, indexs) => {
+                                    Object.values(groups).forEach((group, index) => {
+                                        group['indexGroupe'] = indexs;
+                                    })
+                            });
+                            
                             // Recherche de l'index a partir de la fin de la colonne date de passage
                             indexDateFin = 0;
                             fetchedDataVisited[0].forEach((col, index) => {
@@ -117,7 +123,7 @@
                             let iGroup = 1;
                             // Boucler à travers les données pour ajouter chaque point au selectpicker
                             Object.values(fetchedData).forEach(group => {
-                                var option = `<option value="${iGroup}">Groupe ${iGroup} : ${group[0].Adresse}</option>`;
+                                var option = `<option value="${iGroup}">Groupe ${group['indexGroup']} : ${group[0].Adresse}</option>`;
                                 selectPicker.append(option);
                                 iGroup+=1;
                             });
