@@ -80,8 +80,8 @@
 
                             Object.values(fetchedData).forEach((groups, indexs) => {
                                     Object.values(groups).forEach((group, index) => {
-                                        console.log(indexs, ' : ', index);
                                         group['indexGroupe'] = indexs;
+                                        groups['indexGroupe'] = indexs;
                                     })
                             });
                             
