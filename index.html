@@ -128,7 +128,7 @@
                             // Boucler à travers les données pour ajouter chaque point au selectpicker
                             Object.values(fetchedData).forEach(group => {
                                 let index = group[0]['indexGroupe'];
-                                let value = index - iGroup + igroup;
+                                let value = index - iGroup + iGroup ;
                                 var option = `<option value="${value}">Groupe ${group[0]['indexGroupe']} : ${group[0].Adresse}</option>`;
                                 selectPicker.append(option);
                                 iGroup+=1;
