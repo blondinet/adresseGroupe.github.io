@@ -12,6 +12,7 @@
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-select/1.13.1/js/bootstrap-select.min.js"></script>
     <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
     <style>
         #map { height: 600px; }
     </style>
@@ -31,8 +32,31 @@
         <div id="list-deleted" style="width: 30%; overflow:scroll">
             <button id="show-deleted">Afficher les résidences déja visitées</button>
         </div>
+        <button id="postData">Send POST Request</button>
+    
     </div>
     <script>
+         document.getElementById('postData').addEventListener('click', function() {
+            axios.post('https://jsonplaceholder.typicode.com/posts', {
+                title: 'foo',
+                body: 'bar',
+                userId: 1
+            })
+            .then(function (response) {
+                console.log('Success:', response);
+            })
+            .catch(function (error) {
+                console.log('Error:', error);
+            });
+            axios.get('https://jsonplaceholder.typicode.com/posts/1')
+            .then(function (response) {
+                document.getElementById('response').textContent = JSON.stringify(response.data, null, 2);
+            })
+            .catch(function (error) {
+                console.log('Error:', error);
+            });
+        });
+
         var map = L.map('map').setView([45.7516852, 4.9162884], 13); // Initialiser la carte avec un centre et un zoom
 
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
