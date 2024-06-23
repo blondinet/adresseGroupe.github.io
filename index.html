@@ -16,6 +16,8 @@
     <script type="module" src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js"></script>
     <script type="module" src="firebase-config.js"></script>
     <script type="module" src="app.js"></script>
+    <script type="module" src="csv.js"></script>
+    <script type="module" src="utils.js"></script>
     <style>
         #map { height: 600px; }
     </style>
@@ -41,24 +43,21 @@
         // -----------------------------------------------------------------------
         import { readData, writeData, updateData, deleteData, findDataByIndex, transferVisits } from './app.js';
 
-        // ecrire des nouvelles entrées dans la table
-        // (à utiliser uniquement pour intialiser la table une fois pour toutes avec le google spreadsheet)
-        // writeData(6, 4, "2023-06-23", true);
-        // writeData(4, 2, "2023-06-25", true);
-        // writeData(5, 3, "2023-06-26", false);
+        // ecrire ou des nouvelles entrées dans la table
+        // ou mise à jour de données existentes
+        // writeData(42000, 4, "23/06/2024", true);
 
         // met à jour une entrée de la table (champs non indiqués restent inchangés: ici la date)
-        // updateData(6, { cluster: 4, assigned: false });
+        // updateData42000, { cluster: 4, assigned: false });
 
-        // findDataByIndex(5);
+        // findDataByIndex(42000);
 
-        // deleteData(5);
+        // deleteData(42000);
 
         // récupère la table
         // let visites = readData();
 
         // transfer du google spreadsheet vers la base firebase (déjà fait)
-        // TODO: erreur de transfer pour certains elements, valeurs melangees (par exemple index 904, 338)
         // transferVisits('https://docs.google.com/spreadsheets/d/e/2PACX-1vR3-Vi3NqunT7gn4oqfthvfdli61k1ilCAAK8HHAvp1svvPqwbN2AKRZmea7MqvNpB5anhHEuVAu5-7/pub?gid=1064561417&single=true&output=csv')
 
         // -----------------------------------------------------------------------

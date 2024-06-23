@@ -1,5 +1,7 @@
 import { db } from './firebase-config.js';
 import { collection, addDoc, getDocs, query, where, updateDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { parseCSV } from './csv.js';
+import { isInt } from './utils.js';
 
 // Read data
 async function readData() {
@@ -19,6 +21,13 @@ async function readData() {
 
 // Write data
 async function writeData(index, cluster, date_de_passage, assigned) {
+    if (
+        !isInt(index) ||
+        !isInt(cluster)
+    ) {
+        throw new Error("index and cluster should be integer");
+    }
+
     try {
         const q = query(collection(db, "adresseTable"), where("index", "==", index));
         const querySnapshot = await getDocs(q);
@@ -32,9 +41,23 @@ async function writeData(index, cluster, date_de_passage, assigned) {
                 assigned: assigned
             });
             console.log("Document written with ID: ", docRef.id);
-        // Or update the existing document with same index
+        // Or update the existing document with same index if it's different than the one on the database
         } else {
-            console.log("Document already exists with ID: " + querySnapshot.docs[0].id);
+            const doc = querySnapshot.docs[0];
+            const data = doc.data();
+
+            const newData = {cluster: cluster, date_de_passage: date_de_passage, assigned: assigned}
+
+            if (
+                newData.cluster !== data.cluster ||
+                newData.date_de_passage !== data.date_de_passage ||
+                newData.assigned !== data.assigned
+            ) {
+                await updateDoc(doc.ref, newData);
+                console.log("Document updated: ID=" + querySnapshot.docs[0].id);
+            } else {
+                // console.log("Document already up to date: ID=" + querySnapshot.docs[0].id);
+            }
         }
     } catch (error) {
         console.error("Error adding document: ", error);
@@ -43,6 +66,13 @@ async function writeData(index, cluster, date_de_passage, assigned) {
 
 // Update data
 async function updateData(index, newData) {
+    if (!isInt(index)) throw new Error("index should be integer");
+
+    if (newData.cluster) {
+        if (!isInt(newData.cluster))
+        throw new Error("cluster should be integer");
+    }
+
     try {
         const q = query(collection(db, "adresseTable"), where("index", "==", index));
         const querySnapshot = await getDocs(q);
@@ -61,6 +91,8 @@ async function updateData(index, newData) {
 
 // Delete data
 async function deleteData(index) {
+    if (!isInt(index)) throw new Error("index should be integer");
+
     try {
         const q = query(collection(db, "adresseTable"), where("index", "==", index));
         const querySnapshot = await getDocs(q);
@@ -79,6 +111,8 @@ async function deleteData(index) {
 
 // Find data by index
 async function findDataByIndex(index) {
+    if (!isInt(index)) throw new Error("Error: index should be integer");
+
     try {
         const q = query(collection(db, "adresseTable"), where("index", "==", index));
         const querySnapshot = await getDocs(q);
@@ -98,14 +132,12 @@ async function findDataByIndex(index) {
 }
 
 
+// write database using google sheet
 async function transferVisits(spreadsheetURL) {
     fetch(spreadsheetURL)
         .then(response => response.text())
         .then(data => {
-            // Parse the CSV data
-            const rows = data.split('\n');
-            const csvArray = rows.map(row => row.split(','));
-            let fetchedDataVisited = csvArray;
+            let fetchedDataVisited = parseCSV(data);
 
             // check if group has been assigned
             let isAssigned = Array(fetchedDataVisited.length).fill(false);
@@ -135,11 +167,11 @@ async function transferVisits(spreadsheetURL) {
 
             // write to database
             fetchedDataVisited.slice(1).forEach((visit, i) => {
-                let index = visit[0];
-                let group = visit[2];
+                let index = visit[0]; // actually a string of int
+                let group = visit[2]; // actually a string of int
                 let date = dates[index];
                 let assigned = isAssigned[index];
-                writeData(index, group, date, assigned);
+                writeData(Number(index), Number(group), date, assigned);
             });
         })
         .catch(error => {
