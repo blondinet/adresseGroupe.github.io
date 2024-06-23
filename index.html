@@ -37,22 +37,27 @@
         </div>
     </div>
     <script type="module">
+
+        // -----------------------------------------------------------------------
         import { readData, writeData, updateData, deleteData, findDataByIndex } from './app.js';
 
-        // Make functions available globally
-        window.readData = readData;
-        window.writeData = writeData;
-        window.updateData = updateData;
-        window.deleteData = deleteData;
-        window.findDataByIndex = findDataByIndex;
-
-        // test firebase
+        // ecrire des nouvelles entrées dans la table
+        // (à utiliser uniquement pour intialiser la table une fois pour toutes avec le google spreadsheet)
         writeData(6, 4, "2023-06-23", true);
         writeData(4, 2, "2023-06-25", true);
-        // visites = readData();
+        writeData(5, 3, "2023-06-26", false);
+
+        // met à jour une entrée de la table (champs non indiqués restent inchangés: ici la date)
         updateData(6, { cluster: 4, assigned: false });
-        // deleteData(5);
-        // findDataByIndex(5);
+
+        findDataByIndex(5);
+
+        deleteData(5);
+
+        // récupère la table
+        let visites = readData();
+
+        // -----------------------------------------------------------------------
 
         var map = L.map('map').setView([45.7516852, 4.9162884], 13); // Initialiser la carte avec un centre et un zoom
 

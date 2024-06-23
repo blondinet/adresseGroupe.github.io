@@ -20,13 +20,22 @@ async function readData() {
 // Write data
 async function writeData(index, cluster, date_de_passage, assigned) {
     try {
-        const docRef = await addDoc(collection(db, "adresseTable"), {
-            index: index,
-            cluster: cluster,
-            date_de_passage: Timestamp.fromDate(new Date(date_de_passage)),
-            assigned: assigned
-        });
-        console.log("Document written with ID: ", docRef.id);
+        const q = query(collection(db, "adresseTable"), where("index", "==", index));
+        const querySnapshot = await getDocs(q);
+
+        // Add document if no document with the same index exists
+        if (querySnapshot.empty) {
+            const docRef = await addDoc(collection(db, "adresseTable"), {
+                index: index,
+                cluster: cluster,
+                date_de_passage: Timestamp.fromDate(new Date(date_de_passage)),
+                assigned: assigned
+            });
+            console.log("Document written with ID: ", docRef.id);
+        // Or update the existing document with same index
+        } else {
+            console.log("Document already exists with ID: " + querySnapshot.docs[0].id);
+        }
     } catch (error) {
         console.error("Error adding document: ", error);
     }
