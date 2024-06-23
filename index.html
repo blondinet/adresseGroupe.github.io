@@ -18,6 +18,7 @@
     <script type="module" src="app.js"></script>
     <script type="module" src="csv.js"></script>
     <script type="module" src="utils.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.0/papaparse.min.js"></script>
     <style>
         #map { height: 600px; }
     </style>
@@ -42,6 +43,7 @@
 
         // -----------------------------------------------------------------------
         import { readData, writeData, updateData, deleteData, findDataByIndex, transferVisits } from './app.js';
+        import { parseCSV } from './csv.js';
 
         // ecrire ou des nouvelles entrées dans la table
         // ou mise à jour de données existentes
@@ -77,8 +79,9 @@
             });
             $('#grp-'+selectedValue).remove()
         }
+        window.deleteGroup = deleteGroup;
 
-        document.addEventListener('DOMContentLoaded', function () {
+        document.addEventListener('DOMContentLoaded', async function () {
             var selectPicker = $('#select-point'); // Sélectionne le selectpicker par son ID
             var selectedGrps = $('#group-selected');
             var deletedGrpsList = $('#list-deleted');
@@ -87,7 +90,7 @@
             var showDeleted = true;
             var deletedGrps = [];
             var fetchedData; // Variable pour stocker les données récupérées
-            var fetchedDataVisited;
+            const fetchedDataVisited = await readData();
 
             // Initialisation du selectpicker
             selectPicker.selectpicker({
@@ -97,186 +100,162 @@
             });
 
             // Récupération des données depuis votre fichier JSON ou API
-            fetch('https://docs.google.com/spreadsheets/d/e/2PACX-1vR3-Vi3NqunT7gn4oqfthvfdli61k1ilCAAK8HHAvp1svvPqwbN2AKRZmea7MqvNpB5anhHEuVAu5-7/pub?gid=1064561417&single=true&output=csv')
-                .then(response => response.text())
+            fetch('./data.json')
+                .then(response => response.json())
                 .then(data => {
-                    // Parse the CSV data
-                    const rows = data.split('\n');
-                    const csvArray = rows.map(row => row.split(','));
-                    fetchedDataVisited = csvArray;
-                    // Récupération des données depuis votre fichier JSON ou API
-                    fetch('./data.json')
-                        .then(response => response.json())
-                        .then(data => {
-                            fetchedData = data;
+                    fetchedData = data;
 
-                            let i = 1;
-                            Object.values(fetchedData).forEach((groups, indexs) => {
-                                    Object.values(groups).forEach((group, index) => {
-                                        group['indexGroupe'] = i;
-                                    })
-                                i+=1;
-                            });
-                            
-                            // Recherche de l'index a partir de la fin de la colonne date de passage
-                            let indexDateFin = 0;
-                            fetchedDataVisited[0].forEach((col, index) => {
-                                if (col === 'Date de passage') {
-                                    indexDateFin = fetchedDataVisited[0].length - index;
+                    let i = 1;
+                    Object.values(fetchedData).forEach((groups, indexs) => {
+                            Object.values(groups).forEach((group, index) => {
+                                group['indexGroupe'] = i;
+                            })
+                        i+=1;
+                    });
+
+                    i = 1; let j = 0; let nbDelete = 0;
+                    Object.values(fetchedDataVisited).forEach(visite => {
+                        Object.values(fetchedData).forEach((groups, indexs) => {
+                            Object.values(groups).forEach((group, index) => {
+                                if (
+                                    visite.index === group[''] && 
+                                    visite.date_de_passage !== null
+                                ) {
+                                    group['visite'] = visite.date_de_passage;
+                                    deletedGrps.push(group);
+                                    delete fetchedData[indexs + 1 + nbDelete];
+                                    nbDelete += 1;
+                                    //groups.splice(index, 1);
+                                    //if (fetchedData[indexs + 1].length === 0) {
+                                     //   delete fetchedData[indexs + 1];
+                                      //  newObj = {};
+                                      //  Object.entries(fetchedData).forEach((entry, eIndex) => {
+                                      //      newObj[eIndex+1] = entry[1];
+                                      //  })
+                                      //  fetchedData = newObj;
+                                    //}
                                 }
+                                j += 1;
                             })
-                            
-                            i = 1; let j = 0; let nbDelete = 0;
-                            Object.values(fetchedDataVisited).forEach(visite => {
-                                Object.values(fetchedData).forEach((groups, indexs) => {
-                                    Object.values(groups).forEach((group, index) => {
-                                        if (
-                                            visite[0] === group[''] && 
-                                            visite[visite.length-indexDateFin] !== '\r' && 
-                                            visite[visite.length-indexDateFin]
-                                        ) {
-                                            group['visite'] = visite[visite.length-indexDateFin];
-                                            deletedGrps.push(group);
-                                            delete fetchedData[indexs + 1 + nbDelete];
-                                            nbDelete += 1;
-                                            //groups.splice(index, 1);
-                                            //if (fetchedData[indexs + 1].length === 0) {
-                                             //   delete fetchedData[indexs + 1];
-                                              //  newObj = {};
-                                              //  Object.entries(fetchedData).forEach((entry, eIndex) => {
-                                              //      newObj[eIndex+1] = entry[1];
-                                              //  })
-                                              //  fetchedData = newObj;
-                                            //}
-                                        }
-                                        j += 1;
-                                    })
-                                })
-                                i += 1;
-                            })
-
-            
-                            let iGroup = 1;
-                            // Boucler à travers les données pour ajouter chaque point au selectpicker
-                            Object.values(fetchedData).forEach(group => {
-                                let index = group[0]['indexGroupe'];
-                                let value = index - iGroup + iGroup ;
-                                var option = `<option value="${value}">Groupe ${group[0]['indexGroupe']} : ${group[0].Adresse}</option>`;
-                                selectPicker.append(option);
-                                iGroup+=1;
-                            });
-
-                            // Rafraîchir le selectpicker après l'ajout des options
-                            selectPicker.selectpicker('refresh');
                         })
-                        .catch(error => {
-                            console.error('Erreur lors de la récupération des données :', error);
-                        });
+                        i += 1;
+                    })
+
+
+                    let iGroup = 1;
+                    // Boucler à travers les données pour ajouter chaque point au selectpicker
+                    Object.values(fetchedData).forEach(group => {
+                        let index = group[0]['indexGroupe'];
+                        let value = index - iGroup + iGroup ;
+                        var option = `<option value="${value}">Groupe ${group[0]['indexGroupe']} : ${group[0].Adresse}</option>`;
+                        selectPicker.append(option);
+                        iGroup+=1;
+                    });
+
+                    // Rafraîchir le selectpicker après l'ajout des options
+                    selectPicker.selectpicker('refresh');
                 })
                 .catch(error => {
                     console.error('Erreur lors de la récupération des données :', error);
                 });
                 
 
-            deletedBtn.on('click', function(event) {
-                if (true === showDeleted) {
-                    deletedGrps.forEach((point, index) => {
-                        selectedValue = point[''];
+                deletedBtn.on('click', function(event) {
+                    if (true === showDeleted) {
+                        deletedGrps.forEach((point, index) => {
+                            selectedValue = point[''];
 
-                        var voixParBinome = parseFloat(point["Voix estimées du cluster par binome"]).toFixed(1)
+                            var voixParBinome = parseFloat(point["Voix estimées du cluster par binome"]).toFixed(1)
+
+                            var text = `<div id="grp-${selectedValue}">`;
+                            text += `Groupe ${point.Cluster} : ${point.Adresse} : </br>`;
+                            text += ` nombre binomes : ${point["Nb Binomes"]} : </br>`;
+                            text += ` voix estimées par binome: ${voixParBinome} : </br>`;
+                            text += ` Visité le : ${point['visite']} : </br>`;
+                            text += ` --------------------------------- </br></br>`;
+                            text += `</div>`; 
+                            deletedGrpsList.append(text); 
+
+
+                            let latitude = point.Lat;
+                            let longitude = point.Long;
+                            var marker = L.marker([latitude, longitude]).addTo(map);
+                            marker.bindPopup(
+                                'Adresse: ' + point.Adresse +
+                                '<br>Nombre de porte: ' + point.Nombre +
+                                '<br>Nombre de voix: ' + point['Voix estim\u00e9es'] +
+                                '<br>Groupe numéro: '+ point['Cluster']
+                            );
+                            marker.options.id = `marker-${point['']}`;
+                        })
+                        deletedBtn.text('Cacher les résidences déja visitées');
+                        showDeleted = false;
+                    } else {
+                        deletedGrps.forEach((group, index) => {
+                            deleteGroup(group['']);
+                        });
+                        deletedBtn.text('Afficher les résidences déja visitées');
+                        showDeleted = true
+                    }
+                });
+
+                // Écouteur d'événement sur le changement de sélection
+                selectPicker.on('change', function () {
+                    if (fetchedData) {
+                        var selectedValue = $(this).val();
+                        var selectedGroup = fetchedData[selectedValue];
+                        console.log(selectedGroup);
+
+                        // Nombre de portes total pour le cluster
+                        var nbPortes = 0;
+                        for (var i in selectedGroup) {
+                            nbPortes += parseInt(selectedGroup[i].Nombre);
+                        }
+
+                        // Arrondi les voix a 1 chiffre apres la virgule
+                        var voixParBinome = parseFloat(selectedGroup[0]["Voix estimées du cluster par binome"]).toFixed(1)
+
+                        // Boucler à travers les données pour trouver si le le groupe est attribué
+                        var attributed = false;
+                        Object.values(fetchedDataVisited).forEach(visit => {
+                            if (visit.assigned) {
+                                if (visit.cluster == parseInt(selectedGroup[0].Cluster)) {
+                                    attributed = true;
+                                }
+                            }
+                        });
+
+                        var attributionDisplay = attributed ? '<font color="green">Déjà attribué</font>' : 'Non attribué';
+
+                        // 'Adresse: ' + point.Adresse +
+                        //         '<br>Nombre de porte: ' + point.Nombre +
+                        //         '<br>Nombre de voix: ' + point['Voix estim\u00e9es']
 
                         var text = `<div id="grp-${selectedValue}">`;
-                        text += `Groupe ${point.Cluster} : ${point.Adresse} : </br>`;
-                        text += ` nombre binomes : ${point["Nb Binomes"]} : </br>`;
-                        text += ` voix estimées par binome: ${voixParBinome} : </br>`;
-                        text += ` Visité le : ${point['visite']} : </br>`;
-                        text += ` --------------------------------- </br></br>`;
-                        text += `</div>`; 
-                        deletedGrpsList.append(text); 
-    
-                    
-                        let latitude = point.Lat;
-                        let longitude = point.Long;
-                        var marker = L.marker([latitude, longitude]).addTo(map);
-                        marker.bindPopup(
-                            'Adresse: ' + point.Adresse +
-                            '<br>Nombre de porte: ' + point.Nombre +
-                            '<br>Nombre de voix: ' + point['Voix estim\u00e9es'] +
-                            '<br>Groupe numéro: '+ point['Cluster']
-                        );
-                        marker.options.id = `marker-${point['']}`;
-                    })
-                    deletedBtn.text('Cacher les résidences déja visitées');
-                    showDeleted = false;
-                } else {
-                    deletedGrps.forEach((group, index) => {
-                        deleteGroup(group['']);
-                    });
-                    deletedBtn.text('Afficher les résidences déja visitées');
-                    showDeleted = true
-                }
-            });
+                            text += `Groupe ${selectedValue} : ${selectedGroup[0].Adresse} : </br>`;
+                            text += ` nombre binomes : ${selectedGroup[0]["Nb Binomes"]} : </br>`;
+                            text += ` nombre portes : ${nbPortes} : </br>`;
+                            text += ` voix estimées par binome: ${voixParBinome} : </br>`;
+                            text += ` ${attributionDisplay} </br>`;
+                            text += `<button class='btn btn-danger' onclick="deleteGroup(${selectedValue})">Ne plus afficher</button>`;
+                            text += `</div>`;
+                        selectedGrps.append(text);                    
 
-            // Écouteur d'événement sur le changement de sélection
-            selectPicker.on('change', function () {
-                if (fetchedData) {
-                    var selectedValue = $(this).val();
-                    var selectedGroup = fetchedData[selectedValue];
-
-                    // Nombre de portes total pour le cluster
-                    var nbPortes = 0;
-                    for (var i in selectedGroup) {
-                        nbPortes += parseInt(selectedGroup[i].Nombre);
+                        selectedGroup.forEach(point => {
+                            let latitude = point.Lat;
+                            let longitude = point.Long;
+                            var marker = L.marker([latitude, longitude]).addTo(map);
+                            marker.bindPopup(
+                                'Adresse: ' + point.Adresse +
+                                '<br>Nombre de porte: ' + point.Nombre +
+                                '<br>Nombre de voix: ' + parseFloat(point['Voix estim\u00e9es']).toFixed(1) +
+                                '<br>Groupe numéro: '+ point['Cluster']
+                            );
+                            marker.options.id = `marker-${selectedValue}`;
+                        })
                     }
-
-                    // Arrondi les voix a 1 chiffre apres la virgule
-                    var voixParBinome = parseFloat(selectedGroup[0]["Voix estimées du cluster par binome"]).toFixed(1)
-
-                    // Boucler à travers les données pour trouver si le le groupe est attribué
-                    var attributed = false;
-                    var indexGroup = 2;
-                    var indexAttribution = 4;
-                    Object.values(fetchedDataVisited).forEach(group => {
-                        if (group[indexAttribution] == 'TRUE\r') {
-                            console.log(group[indexGroup]);
-                            console.log(selectedGroup[0].Cluster);
-                            if (group[indexGroup] == parseInt(selectedGroup[0].Cluster)) {
-                                attributed = true;
-                            }
-                        }
-                    });
-
-                    var attributionDisplay = attributed ? '<font color="green">Déjà attribué</font>' : 'Non attribué';
-
-                    // 'Adresse: ' + point.Adresse +
-                    //         '<br>Nombre de porte: ' + point.Nombre +
-                    //         '<br>Nombre de voix: ' + point['Voix estim\u00e9es']
-
-                    var text = `<div id="grp-${selectedValue}">`;
-                        text += `Groupe ${selectedValue} : ${selectedGroup[0].Adresse} : </br>`;
-                        text += ` nombre binomes : ${selectedGroup[0]["Nb Binomes"]} : </br>`;
-                        text += ` nombre portes : ${nbPortes} : </br>`;
-                        text += ` voix estimées par binome: ${voixParBinome} : </br>`;
-                        text += ` ${attributionDisplay} </br>`;
-                        text += `<button class='btn btn-danger' onclick="deleteGroup(${selectedValue})">Ne plus afficher</button>`;
-                        text += `</div>`;
-                    selectedGrps.append(text);                    
-
-                    selectedGroup.forEach(point => {
-                        let latitude = point.Lat;
-                        let longitude = point.Long;
-                        var marker = L.marker([latitude, longitude]).addTo(map);
-                        marker.bindPopup(
-                            'Adresse: ' + point.Adresse +
-                            '<br>Nombre de porte: ' + point.Nombre +
-                            '<br>Nombre de voix: ' + parseFloat(point['Voix estim\u00e9es']).toFixed(1) +
-                            '<br>Groupe numéro: '+ point['Cluster']
-                        );
-                        marker.options.id = `marker-${selectedValue}`;
-                    })
-                }
+                });
             });
-        });
 
             // Récupérer les données depuis le fichier JSON généré côté serveur
             // fetch('http://localhost:8000/dataSort.php')

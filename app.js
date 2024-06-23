@@ -7,15 +7,23 @@ import { isInt } from './utils.js';
 async function readData() {
     try {
         const querySnapshot = await getDocs(collection(db, "adresseTable"));
+        const data = [];
         querySnapshot.forEach((doc) => {
-            const data = doc.data();
-            console.log("Document ID:", doc.id, "Index:", data.index, "Cluster:", data.cluster, 
-                "Date de passage:", data.date_de_passage,
-                "Assigné:", data.assigned);
-            return doc;
+            data.push({
+                id: doc.id,
+                index: doc.data().index,
+                cluster: doc.data().cluster,
+                date_de_passage: doc.data().date_de_passage,
+                assigned: doc.data().assigned
+            });
+            // console.log("Document ID:", doc.id, "Index:", data.index, "Cluster:", data.cluster, 
+            //     "Date de passage:", data.date_de_passage,
+            //     "Assigné:", data.assigned);
         });
+        return data;
     } catch (error) {
         console.error("Error reading documents: ", error);
+        return [];
     }
 }
 
@@ -136,42 +144,42 @@ async function findDataByIndex(index) {
 async function transferVisits(spreadsheetURL) {
     fetch(spreadsheetURL)
         .then(response => response.text())
-        .then(data => {
-            let fetchedDataVisited = parseCSV(data);
+        .then(async data => {
+            let fetchedDataVisited = await parseCSV(data);
 
             // check if group has been assigned
-            let isAssigned = Array(fetchedDataVisited.length).fill(false);
+            let isAssigned = Array(fetchedDataVisited.length+1).fill(false);
 
             // check if group has a date
-            let dates = Array(fetchedDataVisited.length).fill('');
+            let dates = Array(fetchedDataVisited.length+1).fill('');
 
             // iterate over data except first row which contains csv headers
             // compute the dates and assignments for each row as some are omitted
-            fetchedDataVisited.slice(1).forEach((visit, i) => {
-                let index = visit[0];
-                let group = visit[2];
-                let date = visit[3];
-                let assigned = visit[4];
+            fetchedDataVisited.forEach((visit, i) => {
+                let index = visit.Index;
+                let group = visit.Groupe;
+                let date = visit["Date de passage"];
+                let assigned = visit["Attribué"];
 
                 if (
                     date !== '' &&
                     date !== '\r'
                 ) {
-                    dates[index] = date;
+                    dates[group] = date;
                 }
 
-                if (assigned === 'TRUE') {
-                    isAssigned[index] = date;
+                if (assigned) {
+                    isAssigned[group] = true;
                 }
             });
 
             // write to database
-            fetchedDataVisited.slice(1).forEach((visit, i) => {
-                let index = visit[0]; // actually a string of int
-                let group = visit[2]; // actually a string of int
-                let date = dates[index];
-                let assigned = isAssigned[index];
-                writeData(Number(index), Number(group), date, assigned);
+            fetchedDataVisited.forEach((visit, i) => {
+                let index = visit.Index;
+                let group = visit.Groupe;
+                let date = dates[group];
+                let assigned = isAssigned[group];
+                writeData(index, group, date, assigned);
             });
         })
         .catch(error => {
