@@ -47,10 +47,10 @@
 
         // ecrire ou des nouvelles entrées dans la table
         // ou mise à jour de données existentes
-        // writeData(42000, 4, "23/06/2024", true);
+        // writeData(42000, 4, "23/06/2024", true, false);
 
         // met à jour une entrée de la table (champs non indiqués restent inchangés: ici la date)
-        // updateData42000, { cluster: 4, assigned: false });
+        // updateData42000, { cluster: 4, assigned: false, isGroupDone: true });
 
         // findDataByIndex(42000);
 
@@ -116,7 +116,7 @@
 
                     let datesDePassage = Array(fetchedDataVisited.length+1);
                     Object.values(fetchedDataVisited).forEach(visite => {
-                        datesDePassage[visite.index] = visite.date_de_passage;
+                        datesDePassage[visite.index] = visite.dateDePassage;
                     });
 
                     let nbDelete = 0;

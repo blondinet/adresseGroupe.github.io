@@ -21,6 +21,8 @@
 //     });
 // }
 
+
+// first column is considered as index if not named
 function parseCSV(csvText) {
     return new Promise((resolve, reject) => {
         Papa.parse(csvText, {
