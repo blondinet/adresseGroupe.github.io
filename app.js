@@ -131,6 +131,7 @@ async function findDataByIndex(index) {
             console.log("Found document - Index:", data.index, "Cluster:", data.cluster, 
                 "Date de passage:", data.date_de_passage,
                 "Assigné:", data.assigned);
+            return data;
         } else {
             console.log("No document found with index: " + index);
         }
