@@ -79,6 +79,7 @@
             });
             $('#grp-'+selectedValue).remove()
         }
+        // FIXME: sinon error en appelant deleteGroup, je sais pas pourquoi
         window.deleteGroup = deleteGroup;
 
         document.addEventListener('DOMContentLoaded', async function () {
@@ -113,33 +114,28 @@
                         i+=1;
                     });
 
-                    i = 1; let j = 0; let nbDelete = 0;
+                    let datesDePassage = Array(fetchedDataVisited.length+1);
                     Object.values(fetchedDataVisited).forEach(visite => {
-                        Object.values(fetchedData).forEach((groups, indexs) => {
-                            Object.values(groups).forEach((group, index) => {
-                                if (
-                                    visite.index === group[''] && 
-                                    visite.date_de_passage !== null
-                                ) {
-                                    group['visite'] = visite.date_de_passage;
-                                    deletedGrps.push(group);
-                                    delete fetchedData[indexs + 1 + nbDelete];
-                                    nbDelete += 1;
-                                    //groups.splice(index, 1);
-                                    //if (fetchedData[indexs + 1].length === 0) {
-                                     //   delete fetchedData[indexs + 1];
-                                      //  newObj = {};
-                                      //  Object.entries(fetchedData).forEach((entry, eIndex) => {
-                                      //      newObj[eIndex+1] = entry[1];
-                                      //  })
-                                      //  fetchedData = newObj;
-                                    //}
-                                }
-                                j += 1;
-                            })
-                        })
-                        i += 1;
-                    })
+                        datesDePassage[visite.index] = visite.date_de_passage;
+                    });
+
+                    let nbDelete = 0;
+                    Object.values(fetchedData).forEach((group, indexs) => {
+                        // check if all adresses of the group were visited
+                        let allGroupVisited = true;
+                        Object.values(group).forEach((residence, index) => {
+                            if (!datesDePassage[parseInt(residence[''])])
+                                allGroupVisited = false;
+                        });
+
+                        if (allGroupVisited) {
+                            // on donne comme date de visite du groupe la date de la premiere adresse
+                            group['visite'] = datesDePassage[parseInt(group[0][''])];
+                            deletedGrps.push(group);
+                            delete fetchedData[indexs + 1 + nbDelete];
+                            nbDelete += 1;
+                        }
+                    });
 
 
                     let iGroup = 1;
@@ -163,7 +159,7 @@
                 deletedBtn.on('click', function(event) {
                     if (true === showDeleted) {
                         deletedGrps.forEach((point, index) => {
-                            selectedValue = point[''];
+                            let selectedValue = point[''];
 
                             var voixParBinome = parseFloat(point["Voix estimées du cluster par binome"]).toFixed(1)
 
