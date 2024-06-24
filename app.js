@@ -146,17 +146,20 @@ async function transferVisits(spreadsheetURL) {
     fetch(spreadsheetURL)
         .then(response => response.text())
         .then(async data => {
-            let fetchedDataVisited = await parseCSV(data);
+            let fetchedSheetData = await parseCSV(data);
+
+            let nb_groups = Math.max(...fetchedSheetData.map(visit => visit.Groupe));
+            console.log(nb_groups);
 
             // check if group has been assigned
-            let isAssigned = Array(fetchedDataVisited.length+1).fill(false);
+            let isAssigned = Array(nb_groups+1).fill(false);
 
             // check if group has a date
-            let dates = Array(fetchedDataVisited.length+1).fill('');
+            let dates = Array(nb_groups+1).fill('');
 
             // iterate over data except first row which contains csv headers
             // compute the dates and assignments for each row as some are omitted
-            fetchedDataVisited.forEach((visit, i) => {
+            fetchedSheetData.forEach((visit, i) => {
                 let index = visit.Index;
                 let group = visit.Groupe;
                 let date = visit["Date de passage"];
@@ -164,7 +167,8 @@ async function transferVisits(spreadsheetURL) {
 
                 if (
                     date !== '' &&
-                    date !== '\r'
+                    date !== '\r' &&
+                    date !== null
                 ) {
                     dates[group] = date;
                 }
@@ -175,13 +179,14 @@ async function transferVisits(spreadsheetURL) {
             });
 
             // write to database
-            fetchedDataVisited.forEach((visit, i) => {
+            fetchedSheetData.forEach((visit, i) => {
                 let index = visit.Index;
                 let group = visit.Groupe;
                 let date = dates[group];
                 let assigned = isAssigned[group];
                 writeData(index, group, date, assigned);
             });
+            console.log('Transfer finished');
         })
         .catch(error => {
             console.error('Erreur lors de la récupération des données :', error);
